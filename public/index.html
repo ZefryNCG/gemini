@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatAI Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #e0e0e0, #f9f9f9);
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        #chat-container {
+            border: 1px solid #ccc;
+            height: 500px;
+            overflow-y: scroll;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+        .message img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+        .message-content {
+            background-color: #f1f1f1;
+            padding: 12px;
+            border-radius: 15px;
+            max-width: 75%;
+            word-break: break-word;
+        }
+        .user-message .message-content {
+            background-color: #dcf8c6;
+            border-bottom-right-radius: 0;
+        }
+        .ai-message .message-content {
+            background-color: #e6e6e6;
+            border-bottom-left-radius: 0;
+        }
+        #user-input {
+            width: calc(100% - 100px);
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            margin-right: 10px;
+        }
+        #send-button {
+            padding: 12px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        #send-button:hover {
+            background-color: #45a049;
+        }
+        .typing-indicator {
+            display: none;
+            padding: 12px;
+            background-color: #e6e6e6;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+        .typing-indicator span {
+            height: 12px;
+            width: 12px;
+            float: left;
+            margin: 0 2px;
+            background-color: #9E9EA1;
+            display: block;
+            border-radius: 50%;
+            opacity: 0.4;
+        }
+        .typing-indicator span:nth-of-type(1) {
+            animation: blink 1s infinite 0.3333s;
+        }
+        .typing-indicator span:nth-of-type(2) {
+            animation: blink 1s infinite 0.6666s;
+        }
+        .typing-indicator span:nth-of-type(3) {
+            animation: blink 1s infinite 0.9999s;
+        }
+        @keyframes blink {
+            50% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>ChatAI Website</h1>
+    <div id="chat-container"></div>
+    <div class="typing-indicator">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+    <div style="display: flex; align-items: center;">
+        <input type="text" id="user-input" placeholder="Type your message...">
+        <button id="send-button">Send</button>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const typingIndicator = document.querySelector('.typing-indicator');
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (message) {
+                appendMessage('You', message, 'user.jpg', 'user-message');
+                typingIndicator.style.display = 'block';
+                fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    typingIndicator.style.display = 'none';
+                    appendMessage('AI', data.reply, 'MASTAH.png', 'ai-message');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    typingIndicator.style.display = 'none';
+                    appendMessage('System', 'An error occurred. Please try again.', 'https://via.placeholder.com/45?text=Sys', 'system-message');
+                });
+                userInput.value = '';
+            }
+        }
+
+        function appendMessage(sender, message, profilePic, className) {
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${className}`;
+            messageElement.innerHTML = `
+                <img src="${profilePic}" alt="${sender}">
+                <div class="message-content">
+                    <strong>${sender}:</strong> ${message}
+                </div>
+            `;
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>
